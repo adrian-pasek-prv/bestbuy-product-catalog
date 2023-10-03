@@ -13,7 +13,7 @@ variable "ingestion_iam_user" {
   default = "ingestion_iam_user"
 }
 
-variable "ingestion_iam_role" {
+variable "ingestion_iam_policy" {
   type = string
   default = "ingestion_iam_user"
 }
