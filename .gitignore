@@ -167,3 +167,4 @@ terraform/.terraform
 terraform/.terraform.tfstate.lock.info
 terraform/vars.tfvars
 terraform/infrastructure.json
+airflow/logs/
