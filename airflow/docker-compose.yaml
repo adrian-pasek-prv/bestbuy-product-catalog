@@ -78,7 +78,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-    - ../scripts:/opt/airflow/scripts
+    - ../src:/opt/airflow/src
     - ../tests:/opt/airflow/tests
     - ../config:/opt/airflow/config_ext
   user: "${AIRFLOW_UID:-50000}:0"
