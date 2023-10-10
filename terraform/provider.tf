@@ -11,3 +11,6 @@ terraform {
 provider "aws" {
   region = var.aws_region
 }
+
+# Extract info about AWS account
+data "aws_caller_identity" "current" {}

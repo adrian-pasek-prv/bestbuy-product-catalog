@@ -8,12 +8,17 @@ variable "s3_bucket_name" {
   default = "s3_bucket_name"
 }
 
-variable "ingestion_iam_user" {
+variable "data_engineer_iam_user" {
   type = string
-  default = "ingestion_iam_user"
+  default = "data-engineer"
 }
 
-variable "ingestion_iam_policy" {
+variable "data_loader_iam_role" {
   type = string
-  default = "ingestion_iam_user"
+  default = "data-loader"
+}
+
+variable "data_loader_iam_policy" {
+  type = string
+  default = "s3-access-policy"
 }
