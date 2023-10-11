@@ -1,6 +1,6 @@
 import json
 import logging
-from pathlib import Path
+from sqlalchemy.exc import IntegrityError
 
 from airflow import settings
 from airflow.models import Connection
@@ -49,12 +49,20 @@ def add_connection(json_file, user_name_key, conn_id, conn_type, role_key):
     # Create Airflow session
     logging.info(f"Creating Airflow session")
     session = settings.Session()
-    logging.info(f"Adding connection {conn_id} to Airflow backend database")
+    logging.info(f"Adding connection {conn_id} to Airflow metadata database")
     try:
+        # Check if the conn_id already exists in the database. If so, then delete it
+        duplicate_connection = session.query(Connection).filter(Connection.conn_id == conn_id)
+        if duplicate_connection:
+            logging.warning(f"Connection '{conn_id}' already exists in the Airflow database. Overwriting ...")
+            duplicate_connection.delete()
+            session.commit()
+        # Add new connection
         session.add(conn)
         session.commit()
-    except:
-        logging.exception(f"Error adding connection {conn_id} to Airflow backend database")
+        logging.info(f"Successfully added connection '{conn_id}' to Airflow database")
+    except Exception as e:
+        logging.exception(f"There was a problem with adding {conn_id}:\n {e}")
         raise
     
     
