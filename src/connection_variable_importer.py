@@ -3,6 +3,7 @@ import logging
 
 from airflow import settings
 from airflow.models import Connection
+from airflow.models import Variable
 
 def add_connection(json_file, user_name_key, conn_id, conn_type, role_key):
     '''
@@ -64,6 +65,35 @@ def add_connection(json_file, user_name_key, conn_id, conn_type, role_key):
         logging.exception(f"There was a problem with adding connection '{conn_id}':\n {e}")
         raise
     
+def add_variable(json_file, variable_key, variable_name):
+    '''
+    Add variable to Airflow backend database using Variable class 
+    where a json file with credentials will be passed
     
+    :param json_file: Path to json file with credentials
+    :param variable_key: Key of variable in json file
+    :param variable_name: Name of the variable in Airflow
     
+    :return: None
+    
+    :raises: Exception if error adding variable to Airflow backend database
+    
+    :Example:
+    
+    >>> add_variable(json_file="credentials.json",
+                        variable_key="aws_region",
+                        variable_name"aws_region")
+    '''
+    
+    with open(json_file) as f:
+        data = json.load(f)
+    variables = data["variables"]["value"]
+    
+    # Set Variable object
+    try:
+        logging.info(f"Setting variable '{variable_name}' from key '{variable_key}'")
+        Variable.set(key=variable_name, value=variables[variable_key])
+        logging.info(f"Successfully set variable '{variable_name}'")
+    except Exception as e:
+        logging.exception(f"There was a problem with setting variable '{variable_name}':\n e")
     
