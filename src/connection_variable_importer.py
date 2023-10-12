@@ -1,6 +1,5 @@
 import json
 import logging
-from sqlalchemy.exc import IntegrityError
 
 from airflow import settings
 from airflow.models import Connection
@@ -49,7 +48,7 @@ def add_connection(json_file, user_name_key, conn_id, conn_type, role_key):
     # Create Airflow session
     logging.info(f"Creating Airflow session")
     session = settings.Session()
-    logging.info(f"Adding connection {conn_id} to Airflow metadata database")
+    logging.info(f"Adding connection '{conn_id}' to Airflow metadata database")
     try:
         # Check if the conn_id already exists in the database. If so, then delete it
         duplicate_connection = session.query(Connection).filter(Connection.conn_id == conn_id)
@@ -62,7 +61,7 @@ def add_connection(json_file, user_name_key, conn_id, conn_type, role_key):
         session.commit()
         logging.info(f"Successfully added connection '{conn_id}' to Airflow database")
     except Exception as e:
-        logging.exception(f"There was a problem with adding {conn_id}:\n {e}")
+        logging.exception(f"There was a problem with adding connection '{conn_id}':\n {e}")
         raise
     
     
