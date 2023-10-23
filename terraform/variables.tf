@@ -3,6 +3,11 @@ variable "aws_region" {
   default = "eu-central-1"
 }
 
+variable "environment" {
+  type = string
+  default = "dev"
+}
+
 variable "s3_bucket_name" {
   type = string
   default = "s3_bucket_name"
