@@ -1,5 +1,5 @@
 aws_region = "eu-central-1"
 s3_bucket_name = "football-leagues-s3-bucket-6543"
-data_engineer_iam_user = "football-leagues-data-engineer"
-data_loader_iam_role = "football-leagues-data-loader"
+data_engineer_iam_user = "data-engineer"
+data_loader_iam_role = "data-loader"
 data_loader_iam_policy = "football-leagues-s3-access-policy"
