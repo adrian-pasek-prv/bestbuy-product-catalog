@@ -3,9 +3,9 @@ variable "aws_region" {
   default = "eu-central-1"
 }
 
-variable "environment" {
+variable "project" {
   type = string
-  default = "dev"
+  default = "football-leagues"
 }
 
 variable "s3_bucket_name" {

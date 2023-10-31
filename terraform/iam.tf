@@ -1,6 +1,6 @@
 # Create IAM user for data engineer
 resource "aws_iam_user" "data_engineer_iam_user" {
-    name = join("-", [var.environment, var.data_engineer_iam_user])
+    name = join("-", [var.project, var.data_engineer_iam_user])
 }
 
 # Create a key-pair access for data engineer user
@@ -10,7 +10,7 @@ resource "aws_iam_access_key" "data_engineer_iam_user_access_key" {
 
 # Create IAM policy for interacting with S3. Delete, List, Put objects into S3
 resource "aws_iam_policy" "data_loader_iam_policy" {
-  name = join("-", [var.environment, var.data_loader_iam_policy])
+  name = join("-", [var.project, var.data_loader_iam_policy])
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -37,7 +37,7 @@ resource "aws_iam_policy" "data_loader_iam_policy" {
 
 # Create data-loader role
 resource "aws_iam_role" "data_loader_role" {
-  name = join("-", [var.environment, var.data_loader_iam_role])
+  name = join("-", [var.project, var.data_loader_iam_role])
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
