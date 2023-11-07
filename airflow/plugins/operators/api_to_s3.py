@@ -1,3 +1,4 @@
+from ast import excepthandler
 from typing import Sequence
 from airflow.models.baseoperator import BaseOperator
 from airflow.providers.http.hooks.http import HttpHook
@@ -67,7 +68,6 @@ class APIToS3Operator(BaseOperator):
             self.log.error(f"Response contains errors from endpoint: '{self.endpoint}':")
             self.log.error(response.json().get("errors"))
             raise AirflowException(response.json().get("errors"))
-        self.log.info(f"Response successful from endpoint: '{self.endpoint}'")
         # Check if response contains any data:
         if len(response.json().get("response")) == 0:
             self.log.error(f"Response contains no data from endpoint: '{self.endpoint}':")
@@ -78,10 +78,15 @@ class APIToS3Operator(BaseOperator):
 
         # PUT reponse in form of bytes to S3 and save as JSON
         self.log.info(f"Saving response to S3: s3://{self.s3_bucket}/{s3_key}")
-        s3_hook.load_bytes(bytes_data=response.content,
-                           key=s3_key,
-                           bucket_name=self.s3_bucket,
-                           replace=self.replace_s3_obj)
+        try:
+            s3_hook.load_bytes(bytes_data=response.content,
+                            key=s3_key,
+                            bucket_name=self.s3_bucket,
+                            replace=self.replace_s3_obj)
+        except AirflowException as e:
+            self.log.error(f"Error saving response to S3: s3://{self.s3_bucket}/{s3_key}")
+            self.log.error(e)
+            raise e
         self.log.info(f"Successfully saved reponse to S3: s3://{self.s3_bucket}/{s3_key}")
 
 
