@@ -23,7 +23,7 @@ class APIToS3Operator(BaseOperator):
         method (str, optional): API method to call. Defaults to "GET".
     """
 
-    template_fields = ("query_params", "s3_key",)
+    template_fields = ("query_params", "s3_key", "http_conn_id", "aws_conn_id", "endpoint")
 
     def __init__(
         self,
