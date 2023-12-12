@@ -1,0 +1,17 @@
+{
+    "name": "Existing Docker Compose (Extend)",
+    "dockerComposeFile": ["../docker-compose.yaml"],
+    "forwardPorts": [],
+    "service": "airflow-scheduler",
+    "workspaceFolder": "/opt/airflow",
+    "shutdownAction": "none",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "remote.autoForwardPorts": false
+            },
+            "extensions": ["ms-python.python", "ms-python.vscode-pylance", "amazonwebservices.aws-toolkit-vscode", "ms-python.black-formatter"]
+        }
+    }
+}
