@@ -9,7 +9,8 @@ from datetime import timedelta
 import time
 
 
-
+def filter_response(response, key):
+    return [item.json().get(key) for item in response]
 
 with DAG(
     dag_id="bestbuy-api",
@@ -35,13 +36,6 @@ with DAG(
         total_pages = response.json().get("totalPages")
         next_page = current_page + 1
 
-        # # filter the response and overwrite the content of original Response object
-        # filtered_response = response.json().get("products")
-        # # Add UTC timestamp for every item
-        # for item in filtered_response:
-        #     item["retrievalTimestamp"] = datetime.utcnow().isoformat() + "Z"
-        # response._content = json.dumps(filtered_response).encode()
-
         if next_page <= total_pages:
             return dict(data={"page": next_page})
         return None
@@ -55,10 +49,12 @@ with DAG(
         http_conn_id="bestbuy-api",
         method="GET",
         endpoint='products(categoryPath.id=abcat0700000&onSale=true&freeShipping=true&inStoreAvailability=true)?apiKey=vPfPIjFVswznNKfOB7R8BA9e&pageSize=100&format=json',
+        response_filter=lambda response: filter_response(response, "products"), 
         pagination_function=get_next_page,
         aws_conn_id="football-leagues-data-loader",
         s3_bucket=Variable.get("s3_bucket_name"),
         s3_key="dev/bestbuy/test/response_{{ ds }}.json",
+        do_xcom_push=False,
     )
 
     start_task >> test_task
