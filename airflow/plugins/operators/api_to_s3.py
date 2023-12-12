@@ -1,11 +1,11 @@
 import requests
 import time
 import json
+import sys
 from airflow.models.baseoperator import BaseOperator
 from airflow.providers.http.hooks.http import HttpHook
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.exceptions import AirflowException
-
 
 class APIToS3Operator(BaseOperator):
     """
@@ -23,7 +23,7 @@ class APIToS3Operator(BaseOperator):
         method (str, optional): API method to call. Defaults to "GET".
     """
 
-    template_fields = ("query_params", "s3_key", "http_conn_id", "aws_conn_id", "endpoint")
+    template_fields = ("query_params", "s3_key", "http_conn_id", "aws_conn_id", "endpoint", "entity_key")
 
     def __init__(
         self,
@@ -32,9 +32,13 @@ class APIToS3Operator(BaseOperator):
         s3_bucket: str,
         s3_key: str,
         endpoint: str,
+        response_key: str = "response",
         query_params: dict = {},
         replace_s3_obj: bool = True,
         method: str = "GET",
+        do_xcom_push: bool = False,
+        entity_key: str = None,
+        entity_id_key: str = "id",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -43,17 +47,21 @@ class APIToS3Operator(BaseOperator):
         self.s3_bucket = s3_bucket
         self.s3_key = s3_key
         self.endpoint = endpoint
+        self.response_key = response_key
         self.query_params = query_params
         self.replace_s3_obj = replace_s3_obj
         self.method = method
+        self.do_xcom_push = do_xcom_push
+        self.entity_key = entity_key
+        self.entity_id_key = entity_id_key
 
     def handle_api_exceptions(
         self,
         http_hook: HttpHook,
         response: requests.Response,
         endpoint: str = None,
+        response_key: str = None,
         error_key: str = "errors",
-        response_key: str = "response",
     ):
         """
         Handle API exceptions like reponse other than 2xx, 3xx or no data
@@ -68,6 +76,7 @@ class APIToS3Operator(BaseOperator):
             e: Airflow Exception
         """
         endpoint = self.endpoint
+        response_key = self.response_key
 
         # Check for response other than 2xx and 3xx
         try:
@@ -83,16 +92,15 @@ class APIToS3Operator(BaseOperator):
             raise AirflowException(response.json().get(error_key))
         # Check if response contains any data:
         if len(response.json().get(response_key)) == 0:
-            self.log.error(f"Response contains no data from endpoint: '{endpoint}':")
-            raise AirflowException(
-                f"Response contains no data from endpoint: '{endpoint}'")
+            self.log.warning(f"Response contains no data from endpoint: '{endpoint}':")
+            sys.exit(0)
 
     def process_response(
         self, 
         http_hook: HttpHook,
         endpoint: str = None,
         query_params: dict = None,
-        response_key: str = "response", 
+        response_key: str = None, 
         paging_key: str = "paging",
         total_pages_key: str = "total",
         current_page_key: str = "current"
@@ -117,9 +125,10 @@ class APIToS3Operator(BaseOperator):
             dict: _description_
         """
 
-        # Set endpoint and query_params to ones provided in the class
+        # Set params to ones provided in the class
         endpoint = self.endpoint
         query_params = self.query_params
+        response_key = self.response_key
 
         self.log.info(f"Getting response from endpoint: {self.endpoint}")
         # Get the initial response in order to determine number of pages
@@ -166,14 +175,17 @@ class APIToS3Operator(BaseOperator):
         # Get the response from endpoint
         response = self.process_response(http_hook)
 
+        # Add processing timestamp as a string
+        response["processing_timestamp"] = context["ts"]
+
         # Convert JSON reponse to bytes
-        response = json.dumps(response).encode('utf-8')
+        response_bytes = json.dumps(response).encode('utf-8')
 
         # PUT reponse in form of bytes to S3 and save as JSON
         self.log.info(f"Saving response to S3: s3://{self.s3_bucket}/{self.s3_key}")
         try:
             s3_hook.load_bytes(
-                bytes_data=response,
+                bytes_data=response_bytes,
                 key=self.s3_key,
                 bucket_name=self.s3_bucket,
                 replace=self.replace_s3_obj,
@@ -187,3 +199,22 @@ class APIToS3Operator(BaseOperator):
         self.log.info(
             f"Successfully saved reponse to S3: s3://{self.s3_bucket}/{self.s3_key}"
         )
+
+        if self.do_xcom_push:
+            # We need to return a list of ids that we can later iterate on with API calls that require some id parameters
+            # If the response contains a list of dicts of entities we need to extract their ids into a list
+            # Otherwise if response is just a list then it's a list of ids
+            response_content = response[self.response_key]
+            if isinstance(response_content[0], dict):
+                entity_ids= []
+                for item in response_content:
+                    entity = item.get(self.entity_key)
+                    entity_ids.append(entity.get(self.entity_id_key))
+            # Else it must be a simple list of ids
+            else:
+                entity_ids = [id for id in response_content]
+            context["ti"].xcom_push(key="entity_ids", value=entity_ids)
+            # Also provide a list of dicts for query_params eg. [{"league": 1}, {"league": 2}] so we can iterate in query_params
+            query_params_list = [{self.entity_key: id} for id in entity_ids]
+            context["ti"].xcom_push(key="query_params_list", value=query_params_list)
+                
