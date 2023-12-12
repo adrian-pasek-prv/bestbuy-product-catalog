@@ -29,10 +29,12 @@ class HttpToS3Operator(HttpOperator):
         else:
             response = super().execute_sync(context=context)
 
-        # If response is paginated it contains a list of JSON-like strings
-        # so convert strings into valid dicts
-        response = [json.loads(item) for item in response]
-        response_bytes = json.dumps(response).encode("utf-8")
+        # Unnest the response
+        response_unnested = []
+        for item in response:
+            response_unnested += item
+
+        response_bytes = json.dumps(response_unnested).encode("utf-8")
 
         s3_hook = S3Hook(aws_conn_id=self.aws_conn_id)
 
