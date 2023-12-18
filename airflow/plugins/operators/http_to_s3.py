@@ -24,6 +24,7 @@ class HttpToS3Operator(HttpOperator):
 
     def execute(self, context) -> Any:
 
+        self.log.info(f"Executing HTTP request")
         if self.deferrable:
             response = super().execute_async(context=context)
         else:
@@ -36,6 +37,7 @@ class HttpToS3Operator(HttpOperator):
 
         response_bytes = json.dumps(response_unnested).encode("utf-8")
 
+        self.log.info(f"Uploading response to S3")
         s3_hook = S3Hook(aws_conn_id=self.aws_conn_id)
 
         s3_hook.load_bytes(
