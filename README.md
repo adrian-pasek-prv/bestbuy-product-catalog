@@ -1,5 +1,5 @@
-# football-leagues-data-pipeline
-A data engineering project that fetches football data from www.api-football.com, stores it in Amazon S3, stages it in Snowflake, and models it with DBT to provide a comprehensive data warehouse for football leagues across Europe.
+# bestbuy-product-catalog
+A data engineering project that fetches data from api.bestbuy.com, stores it in Amazon S3, stages it in Snowflake, and models it with DBT to provide a comprehensive look at BestBuy product catalog.
 
 ## How to set up infrastructure
 - `terraform plan`
