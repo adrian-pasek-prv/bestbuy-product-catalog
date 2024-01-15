@@ -1,4 +1,3 @@
-import json
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from operators.http_to_s3 import HttpToS3Operator
@@ -6,8 +5,9 @@ from airflow.models import Variable
 from datetime import datetime
 from datetime import timedelta
 import time
+import os
 
-API_KEY = Variable.get("bestbuy_api_key")
+API_KEY = os.getenv("BESTBUY_API_KEY")
 PRODUCT_FIELD_LIST = [
     "sku", "name", "type", "start_date", "active", "active_update_date",
     "regular_price", "sale_price", "price_update_date", "on_sale", "url",
@@ -23,16 +23,18 @@ def filter_response(response, key):
     return [item.json().get(key) for item in response]
 
 with DAG(
-    dag_id="bestbuy-api",
-    start_date=datetime(2023,5,1),
+    dag_id="bestbuy_product_catalog",
+    start_date=datetime(2023,11,1),
     schedule="@daily",
-    catchup=False,
-    tags= ["bestbuy"],
+    catchup=True,
+    max_active_runs=1,
+    tags= ["bestbuy", "http_operator"],
     default_args={
         "owner": "adrian.pasek",
         "retries": 5,
         "retry_delay": timedelta(seconds=10),
-        "execution_timeout": timedelta(hours=1)
+        "execution_timeout": timedelta(hours=1),
+        "depends_on_past": True,
     },
     params={
         "http_conn_id": "bestbuy-api",
@@ -54,20 +56,22 @@ with DAG(
         task_id="start_task"
     )
 
-    test_task = HttpToS3Operator(
-        task_id="test_task",
+    get_products_task = HttpToS3Operator(
+        task_id="get_products_task",
         http_conn_id="bestbuy-api",
         method="GET",
         endpoint=f"products(categoryPath.id=abcat0700000)?apiKey={API_KEY}&show={','.join(PRODUCT_FIELD_LIST)}&pageSize=100&format=json",
         response_filter=lambda response: filter_response(response, "products"), 
         pagination_function=get_next_page,
-        aws_conn_id="football-leagues-data-loader",
+        aws_conn_id="bestbuy-product-catalog-data-loader",
         s3_bucket=Variable.get("s3_bucket_name"),
-        s3_key="dev/bestbuy/test/response_{{ ds }}.json",
+        s3_key="bestbuy/products/products_{{ ds }}.json",
         do_xcom_push=False,
     )
 
-    start_task >> test_task
+    end_task = EmptyOperator(
+        task_id="end_task"
+    )
 
-if __name__ == "__main__":
-    dag.test()
+
+    start_task >> get_products_task >> end_task

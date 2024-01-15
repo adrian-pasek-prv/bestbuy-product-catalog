@@ -1,4 +1,4 @@
-project = "football-leagues"
+project = "bestbuy-product-catalog"
 aws_region = "eu-central-1"
 s3_bucket_name = "s3-bucket-6543"
 data_engineer_iam_user = "data-engineer"
