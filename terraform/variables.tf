@@ -5,7 +5,7 @@ variable "aws_region" {
 
 variable "project" {
   type = string
-  default = "football-leagues"
+  default = "bestbuy-product-catalog"
 }
 
 variable "s3_bucket_name" {
