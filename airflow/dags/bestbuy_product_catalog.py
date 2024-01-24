@@ -24,7 +24,7 @@ def filter_response(response, key):
 
 with DAG(
     dag_id="bestbuy_product_catalog",
-    start_date=datetime(2023,11,1),
+    start_date=datetime(2023,1,1),
     schedule="@daily",
     catchup=True,
     max_active_runs=1,
@@ -56,17 +56,26 @@ with DAG(
         task_id="start_task"
     )
 
-    get_products_task = HttpToS3Operator(
+    # Define a list of product categories
+    product_categories = {"video_games": "abcat0700000", "music_and_movies": "abcat0600000"}
+    endpoints = [f"products(categoryPath.id={category})?apiKey={API_KEY}&show={','.join(PRODUCT_FIELD_LIST)}&pageSize=100&format=json" for category in product_categories.values()]
+    s3_paths = [f"bestbuy/products/categories/{category}/" + "{{ ds }}" + ".json" for category in product_categories]
+    # Create a kwargs list with the endpoint and s3_path for each product category
+    zipped = zip(endpoints, s3_paths)
+    kwargs_list = [{"endpoint": endpoint, "s3_key": s3_path} for endpoint, s3_path in zipped]
+
+    get_products_task = HttpToS3Operator.partial(
         task_id="get_products_task",
         http_conn_id="bestbuy-api",
         method="GET",
-        endpoint=f"products(categoryPath.id=abcat0700000)?apiKey={API_KEY}&show={','.join(PRODUCT_FIELD_LIST)}&pageSize=100&format=json",
         response_filter=lambda response: filter_response(response, "products"), 
         pagination_function=get_next_page,
         aws_conn_id="bestbuy-product-catalog-data-loader",
         s3_bucket=Variable.get("s3_bucket_name"),
-        s3_key="bestbuy/products/products_{{ ds }}.json",
         do_xcom_push=False,
+        pool="one_pool"
+    ).expand_kwargs(
+        kwargs_list
     )
 
     end_task = EmptyOperator(
