@@ -4,7 +4,6 @@ from operators.http_to_s3 import HttpToS3Operator
 from airflow.models import Variable
 from datetime import datetime
 from datetime import timedelta
-import time
 import os
 
 API_KEY = os.getenv("BESTBUY_API_KEY")
@@ -43,7 +42,6 @@ with DAG(
     
     def get_next_page(response):
 
-        time.sleep(1)
         current_page = response.json().get("currentPage")
         total_pages = response.json().get("totalPages")
         next_page = current_page + 1
@@ -57,7 +55,7 @@ with DAG(
     )
 
     # Define a list of product categories
-    product_categories = {"video_games": "abcat0700000", "music_and_movies": "abcat0600000"}
+    product_categories = {"video_games": "abcat0700000", "movies_and_tv": "cat02015"}
     endpoints = [f"products(categoryPath.id={category})?apiKey={API_KEY}&show={','.join(PRODUCT_FIELD_LIST)}&pageSize=100&format=json" for category in product_categories.values()]
     s3_paths = [f"bestbuy/products/categories/{category}/" + "{{ ds }}" + ".json" for category in product_categories]
     # Create a kwargs list with the endpoint and s3_path for each product category
@@ -81,6 +79,5 @@ with DAG(
     end_task = EmptyOperator(
         task_id="end_task"
     )
-
 
     start_task >> get_products_task >> end_task
