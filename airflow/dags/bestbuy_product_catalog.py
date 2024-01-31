@@ -5,6 +5,7 @@ from airflow.models import Variable
 from datetime import datetime
 from datetime import timedelta
 import os
+import time
 
 API_KEY = os.getenv("BESTBUY_API_KEY")
 PRODUCT_FIELD_LIST = [
@@ -42,6 +43,8 @@ with DAG(
     
     def get_next_page(response):
 
+        # throttle call due to rate limit
+        time.sleep(5)
         current_page = response.json().get("currentPage")
         total_pages = response.json().get("totalPages")
         next_page = current_page + 1
@@ -55,8 +58,13 @@ with DAG(
     )
 
     # Define a list of product categories
-    product_categories = {"video_games": "abcat0700000", "movies_and_tv": "cat02015"}
-    endpoints = [f"products(categoryPath.id={category})?apiKey={API_KEY}&show={','.join(PRODUCT_FIELD_LIST)}&pageSize=100&format=json" for category in product_categories.values()]
+    product_categories = {"video_games": "(pcmcat1572034351415,pcmcat1560455091535,pcmcat300300050002,pcmcat295700050012)",
+                           "movies": "(pcmcat378400050006,pcmcat1680807291743)",
+                           "tvs": "(abcat0101001)",
+                           "headphones": "(abcat0204000)",
+                           "laptops": "(abcat0502000)",
+                           "smartphones": "(pcmcat311200050005)"}
+    endpoints = [f"products(categoryPath.id in {category})?apiKey={API_KEY}&show={','.join(PRODUCT_FIELD_LIST)}&pageSize=100&format=json" for category in product_categories.values()]
     s3_paths = [f"bestbuy/products/categories/{category}/" + "{{ ds }}" + ".json" for category in product_categories]
     # Create a kwargs list with the endpoint and s3_path for each product category
     zipped = zip(endpoints, s3_paths)
@@ -71,7 +79,7 @@ with DAG(
         aws_conn_id="bestbuy-product-catalog-data-loader",
         s3_bucket=Variable.get("s3_bucket_name"),
         do_xcom_push=False,
-        pool="one_pool"
+        pool="one_slot"
     ).expand_kwargs(
         kwargs_list
     )
