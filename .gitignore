@@ -170,3 +170,4 @@ terraform/infrastructure.json
 airflow/logs/
 config/
 src/test.py
+terraform/snowflake.env

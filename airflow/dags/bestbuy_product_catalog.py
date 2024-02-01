@@ -59,11 +59,14 @@ with DAG(
 
     # Define a list of product categories
     product_categories = {"video_games": "(pcmcat1572034351415,pcmcat1560455091535,pcmcat300300050002,pcmcat295700050012)",
-                           "movies": "(pcmcat378400050006,pcmcat1680807291743)",
                            "tvs": "(abcat0101001)",
                            "headphones": "(abcat0204000)",
                            "laptops": "(abcat0502000)",
-                           "smartphones": "(pcmcat311200050005)"}
+                           "smartphones": "(pcmcat311200050005)",
+                           "toys": "(pcmcat1492451998184)",
+                           "gaming_furniture": "(pcmcat219100050010)",
+                           "wearable_technology": "(pcmcat332000050000)",
+    }
     endpoints = [f"products(categoryPath.id in {category})?apiKey={API_KEY}&show={','.join(PRODUCT_FIELD_LIST)}&pageSize=100&format=json" for category in product_categories.values()]
     s3_paths = [f"bestbuy/products/categories/{category}/" + "{{ ds }}" + ".json" for category in product_categories]
     # Create a kwargs list with the endpoint and s3_path for each product category
