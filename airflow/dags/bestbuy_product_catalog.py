@@ -24,7 +24,7 @@ def filter_response(response, key):
 
 with DAG(
     dag_id="bestbuy_product_catalog",
-    start_date=datetime(2023,1,1),
+    start_date=datetime(2023,12,2),
     schedule="@daily",
     catchup=True,
     max_active_runs=1,
@@ -44,7 +44,7 @@ with DAG(
     def get_next_page(response):
 
         # throttle call due to rate limit
-        time.sleep(5)
+        time.sleep(1)
         current_page = response.json().get("currentPage")
         total_pages = response.json().get("totalPages")
         next_page = current_page + 1
@@ -58,7 +58,7 @@ with DAG(
     )
 
     # Define a list of product categories
-    product_categories = {"video_games": "(pcmcat1572034351415,pcmcat1560455091535,pcmcat300300050002,pcmcat295700050012)",
+    product_categories = {"video_games": "(pcmcat1487699281907)",
                            "tvs": "(abcat0101001)",
                            "headphones": "(abcat0204000)",
                            "laptops": "(abcat0502000)",
