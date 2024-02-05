@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    snowflake = {
+      source  = "Snowflake-Labs/snowflake"
+      version = "~> 0.76"
+    }
   }
 }
 
@@ -16,6 +20,11 @@ provider "aws" {
       Project = var.project
     }
   }
+}
+
+# Configure the Snowflake Provider
+provider "snowflake" {
+  role = "SYSADMIN"
 }
 
 # Extract info about AWS account
