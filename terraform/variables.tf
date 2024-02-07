@@ -27,3 +27,18 @@ variable "data_loader_iam_policy" {
   type = string
   default = "s3-access-policy"
 }
+
+variable "snowflake_iam_user" {
+  type = string
+  default = "snowflake-user"
+}
+
+variable "snowflake_iam_policy" {
+  type = string
+  default = "snowflake-policy"
+}
+
+variable "snowflake_iam_role" {
+  type = string
+  default = "snowflake-storage-integration-role"
+}
