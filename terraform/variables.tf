@@ -42,3 +42,19 @@ variable "snowflake_iam_role" {
   type = string
   default = "snowflake-storage-integration-role"
 }
+
+variable "snowflake_warehouse" {
+  type = string
+  default = "snowflake_warehouse"
+}
+
+variable "snowflake_raw_db" {
+  type = string
+  default = "raw_db"
+  
+}
+
+variable "snowflake_raw_table" {
+  type = string
+  default = "raw_table"
+}

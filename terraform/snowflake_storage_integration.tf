@@ -39,7 +39,7 @@ resource "aws_iam_policy" "snowflake_iam_policy" {
 
 # Create storage integration between AWS S3 and Snowflake
 resource "snowflake_storage_integration" "snowflake_storage_integration" {
-    name = join("-", [var.project, "storage-integration"])
+    name = "BESTBUY_STORAGE_INTEGRATION"
     comment = "Storage integration between AWS S3 and Snowflake"
     type = "EXTERNAL_STAGE"
     enabled = true
@@ -80,7 +80,21 @@ resource "aws_iam_role_policy_attachment" "snowflake_iam_policy_attachment" {
   role       = aws_iam_role.snowflake_iam_role.name
 }
 
+# Create JSON file format
+resource "snowflake_file_format" "json_file_format" {
+  name = "BESTBUY_JSON_FILE_FORMAT"
+  database = snowflake_database.snowflake_raw_db.name
+  schema = "PUBLIC"
+  format_type = "JSON"
+  strip_outer_array = true
+}
 
-
-
-
+# Create a stage
+resource "snowflake_stage" "stage" {
+  database = snowflake_database.snowflake_raw_db.name
+  name = "BESTBUY_STAGE"
+  schema = "PUBLIC"
+  file_format = "FORMAT_NAME = ${snowflake_database.snowflake_raw_db.name}.PUBLIC.${snowflake_file_format.json_file_format.name}"
+  storage_integration = snowflake_storage_integration.snowflake_storage_integration.name
+  url = "s3://${aws_s3_bucket.s3_bucket.id}/"
+}
