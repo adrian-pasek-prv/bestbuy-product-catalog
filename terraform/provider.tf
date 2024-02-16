@@ -24,7 +24,7 @@ provider "aws" {
 
 # Configure the Snowflake Provider
 provider "snowflake" {
-  role = "SYSADMIN"
+  role = "INFRA_ADMIN"
 }
 
 # Extract info about AWS account
