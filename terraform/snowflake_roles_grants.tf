@@ -39,11 +39,13 @@ resource "snowflake_grant_privileges_to_role" "data_loader_schema_grant" {
 
 # Table grants
 resource "snowflake_grant_privileges_to_role" "data_loader_table_grant" {
-  privileges = [ "DELETE", "INSERT", "TRUNCATE"]
+  privileges = [ "DELETE", "INSERT", "TRUNCATE", "SELECT"]
   role_name = snowflake_role.data_loader.name
   on_schema_object {
-    object_type = "TABLE"
-    object_name = "${snowflake_database.snowflake_raw_db.name}.PUBLIC.${snowflake_table.snowflake_raw_table.name}"
+    all {
+      object_type_plural = "TABLES"
+      in_schema = "${snowflake_database.snowflake_raw_db.name}.PUBLIC"
+    }
   }
 }
 
