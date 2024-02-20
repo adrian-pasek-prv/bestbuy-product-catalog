@@ -39,7 +39,7 @@ resource "snowflake_grant_privileges_to_role" "data_loader_schema_grant" {
 
 # Table grants
 resource "snowflake_grant_privileges_to_role" "data_loader_table_grant" {
-  privileges = [ "DELETE", "INSERT", "TRUNCATE", "SELECT"]
+  privileges = ["DELETE", "INSERT", "TRUNCATE", "SELECT"]
   role_name = snowflake_role.data_loader.name
   on_schema_object {
     all {

@@ -19,9 +19,13 @@ resource "snowflake_table" "snowflake_raw_table" {
   schema = "PUBLIC"
   comment = "Table for raw JSON data"
   column {
-    name = "json_data"
+    name = "JSON_DATA"
     type = "VARIANT"
     nullable = true
   }
-  
+  column {
+    name = "FILENAME"
+    type = "TEXT"
+    nullable = true
+  }
 }
