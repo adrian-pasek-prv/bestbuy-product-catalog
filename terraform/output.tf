@@ -13,6 +13,15 @@ output "airflow_roles" {
     "bestbuy-api": {
       "conn_type": "http",
       "host": "https://api.bestbuy.com/v1/",
+    },
+    "snowflake": {
+      "conn_type": "snowflake",
+      "login": snowflake_user.data_loader_user.name,
+      "extra": {
+        "account": "IS64571",
+        "region": "eu-central-1",
+        "private_key_content": data.external.data_loader_snowflake_user_keys.result.data_loader_snowflake_user_priv_key,
+      }
     }
   }
   sensitive = true

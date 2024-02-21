@@ -1,7 +1,22 @@
 ##############################################
-####### DATA_LOADER ROLE AND GRANTS ##########
+####### DATA_LOADER USER, ROLE AND GRANTS ####
 ##############################################
 ##############################################
+
+
+data "external" "data_loader_snowflake_user_keys" {
+  program = ["bash", "keys_export.sh"]
+
+}
+
+resource "snowflake_user" "data_loader_user" {
+  name = "DATA_LOADER"
+  default_role = snowflake_role.data_loader.name
+  default_warehouse = snowflake_warehouse.snowflake_wh.name
+  # Snowflake requires public key without a header and footer
+  rsa_public_key = data.external.data_loader_snowflake_user_keys.result.data_loader_snowflake_user_pub_key
+  
+}
 
 resource "snowflake_role" "data_loader" {
   name = "DATA_LOADER"

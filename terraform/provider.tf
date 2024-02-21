@@ -8,6 +8,10 @@ terraform {
       source  = "Snowflake-Labs/snowflake"
       version = "~> 0.85.0"
     }
+    external = {
+      source = "hashicorp/external"
+      version = "2.3.3"
+    }
   }
 }
 
