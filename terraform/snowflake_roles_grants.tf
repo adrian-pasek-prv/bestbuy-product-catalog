@@ -23,6 +23,12 @@ resource "snowflake_role" "data_loader" {
   comment = "Role for copying into raw table from S3 bucket"
 }
 
+# Assign role to user
+resource "snowflake_role_grants" "data_loader_role_assignment" {
+  role_name = snowflake_role.data_loader.name
+  users = [snowflake_user.data_loader_user.name]
+}
+
 # Warehouse grants
 resource "snowflake_grant_privileges_to_role" "data_loader_warehouse_grant" {
   privileges = ["USAGE"]
