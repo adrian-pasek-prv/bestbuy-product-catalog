@@ -75,7 +75,8 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # BestBuy API Key
     BESTBUY_API_KEY: ${BESTBUY_API_KEY}
-    AIRFLOW__LOGGING__LOGGING_LEVEL: DEBUG
+    AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+    AIRFLOW__CORE__TEST_CONNECTION: 'enabled'
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs

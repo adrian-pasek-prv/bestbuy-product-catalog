@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# Extract the keys without header and footer and remove new line breaks because JSON doesn't process them
-data_loader_snowflake_user_pub_key=$(sed -n '/-----BEGIN PUBLIC KEY-----/,/-----END PUBLIC KEY-----/p' ~/.ssh/data_loader_snowflake_user.pub | sed '1d;$d' | tr -d '\n')
-data_loader_snowflake_user_priv_key=$(sed -n '/-----BEGIN PRIVATE KEY-----/,/-----END PRIVATE KEY-----/p' ~/.ssh/data_loader_snowflake_user.p8 | sed '1d;$d' | tr -d '\n')
+# Extract public key for Snowflake without header and footer and remove new line '\n' due to issues with parsing a JSON
+data_loader_snowflake_user_pub_key=$(awk '!/-----BEGIN PUBLIC KEY-----/ && !/-----END PUBLIC KEY-----/' ~/.ssh/data_loader_snowflake_user.pub)
+# Extract private key for Airflow, header and footer included
+data_loader_snowflake_user_priv_key=$(cat ~/.ssh/data_loader_snowflake_user.p8)
 
-printf '{"data_loader_snowflake_user_pub_key":"%s","data_loader_snowflake_user_priv_key":"%s"}' "$data_loader_snowflake_user_pub_key" "$data_loader_snowflake_user_priv_key"
-
+# Use jq to format the data as JSON
+jq -n \
+  --arg pub_key "$data_loader_snowflake_user_pub_key" \
+  --arg priv_key "$data_loader_snowflake_user_priv_key" \
+  '{"data_loader_snowflake_user_pub_key":$pub_key,"data_loader_snowflake_user_priv_key":$priv_key}'
