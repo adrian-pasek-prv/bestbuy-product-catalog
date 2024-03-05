@@ -28,4 +28,9 @@ resource "snowflake_table" "snowflake_raw_table" {
     type = "TEXT"
     nullable = true
   }
+  column {
+    name = "LOAD_DATE"
+    type = "TEXT"
+    nullable = true
+  }
 }

@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from operators.http_to_s3 import HttpToS3Operator
+from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 from airflow.models import Variable
 from datetime import datetime
 from datetime import timedelta
@@ -38,7 +39,9 @@ with DAG(
     },
     params={
         "http_conn_id": "bestbuy-api",
-    }
+        "snowflake_conn_id": "snowflake"
+    },
+    template_searchpath="/opt/airflow/plugins/sql"
 ) as dag:
     
     def get_next_page(response):
@@ -73,6 +76,7 @@ with DAG(
     zipped = zip(endpoints, s3_paths)
     kwargs_list = [{"endpoint": endpoint, "s3_key": s3_path} for endpoint, s3_path in zipped]
 
+    # Retrieve data from API and transfer it to S3
     get_products_task = HttpToS3Operator.partial(
         task_id="get_products_task",
         http_conn_id="bestbuy-api",
@@ -87,8 +91,19 @@ with DAG(
         kwargs_list
     )
 
+    # Copy into Snowflake
+    copy_into_snowflake_task = SnowflakeOperator(
+        task_id="copy_into_snowflake_task",
+        snowflake_conn_id="snowflake",
+        sql="copy_into_json.sql",
+        warehouse="DATA_LOAD_XS",
+        role="DATA_LOADER",
+        database="BESTBUY_RAW",
+        schema="PUBLIC"
+    )
+
     end_task = EmptyOperator(
         task_id="end_task"
     )
 
-    start_task >> get_products_task >> end_task
+    start_task >> get_products_task >> copy_into_snowflake_task >> end_task
