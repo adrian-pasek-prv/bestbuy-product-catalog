@@ -85,6 +85,7 @@ x-airflow-common:
     - ../src:/opt/airflow/src
     - ../tests:/opt/airflow/tests
     - ../config:/opt/airflow/config_ext
+    - ../include:/opt/airflow/include
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on

@@ -1,1 +1,2 @@
 pytest
+airflow-provider-great-expectations==0.2.8
