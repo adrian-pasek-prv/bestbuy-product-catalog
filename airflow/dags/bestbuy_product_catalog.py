@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from operators.http_to_s3 import HttpToS3Operator
-from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.models import Variable
 from datetime import datetime
 from datetime import timedelta
@@ -23,6 +23,8 @@ PRODUCT_FIELD_LIST = [
 def filter_response(response, key):
     return [item.json().get(key) for item in response]
 
+
+
 with DAG(
     dag_id="bestbuy_product_catalog",
     start_date=datetime(2023,12,2),
@@ -38,10 +40,9 @@ with DAG(
         "depends_on_past": True,
     },
     params={
-        "http_conn_id": "bestbuy-api",
-        "snowflake_conn_id": "snowflake"
+        "snowflake_conn_id": "snowflake",
     },
-    template_searchpath="/opt/airflow/plugins/sql"
+    template_searchpath="/opt/airflow/plugins/sql",
 ) as dag:
     
     def get_next_page(response):
@@ -92,14 +93,18 @@ with DAG(
     )
 
     # Copy into Snowflake
-    copy_into_snowflake_task = SnowflakeOperator(
+    copy_into_snowflake_task = SQLExecuteQueryOperator(
         task_id="copy_into_snowflake_task",
-        snowflake_conn_id="snowflake",
+        conn_id="snowflake",
+        autocommit=True,
         sql="copy_into_json.sql",
-        warehouse="DATA_LOAD_XS",
-        role="DATA_LOADER",
-        database="BESTBUY_RAW",
-        schema="PUBLIC"
+        params={
+            "warehouse": "DATA_LOAD_XS",
+            "role": "DATA_LOADER",
+            "database": "BESTBUY_RAW",
+            "schema": "PUBLIC",
+        },
+        split_statements=True
     )
 
     end_task = EmptyOperator(
