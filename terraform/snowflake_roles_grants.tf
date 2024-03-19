@@ -3,18 +3,36 @@
 ##############################################
 ##############################################
 
+# Generate a SSH key-pair for DATA_LOADER user
+resource "tls_private_key" "data_loader_ssh_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
 
-data "external" "data_loader_snowflake_user_keys" {
-  program = ["bash", "keys_export.sh"]
+# Export key files to ../config so it will be readable by Airflow
+resource "terraform_data" "data_loader_ssh_key_file" {
 
+  provisioner "local-exec" { 
+    command = <<-EOT
+      echo "${tls_private_key.data_loader_ssh_key.private_key_pem}" > ../config/data_loader_snowflake_user.pem
+      chmod 400 ../config/data_loader_snowflake_user.pem
+      echo "${trimspace(tls_private_key.data_loader_ssh_key.public_key_pem)}" > ../config/data_loader_snowflake_user.pub
+      chmod 400 ../config/data_loader_snowflake_user.pub
+      EOT
+  }
+}
+
+# Snowflake requires public key without a header and footer. This script will remove them.
+data "external" "data_loader_snowflake_user_pub_key_without_header" {
+  program = ["bash", "data_loader_key_remove_header.sh"]
 }
 
 resource "snowflake_user" "data_loader_user" {
   name = "DATA_LOADER"
   default_role = snowflake_role.data_loader.name
   default_warehouse = snowflake_warehouse.snowflake_wh.name
-  # Snowflake requires public key without a header and footer
-  rsa_public_key = data.external.data_loader_snowflake_user_keys.result.data_loader_snowflake_user_pub_key
+  # Take header and footer-less keys
+  rsa_public_key = data.external.data_loader_snowflake_user_pub_key_without_header.result.data_loader_snowflake_user_pub_key
   
 }
 

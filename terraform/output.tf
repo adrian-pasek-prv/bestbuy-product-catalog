@@ -19,8 +19,9 @@ output "airflow_roles" {
       "login": snowflake_user.data_loader_user.name,
       "extra": {
         "account": "IS64571",
-        "region": "eu-central-1",
-        "private_key_content": data.external.data_loader_snowflake_user_keys.result.data_loader_snowflake_user_priv_key,
+        "region": var.aws_region,
+        "database": snowflake_database.snowflake_raw_db.name
+        "private_key_file": "config_ext/data_loader_snowflake_user.pem",
       }
     }
   }
