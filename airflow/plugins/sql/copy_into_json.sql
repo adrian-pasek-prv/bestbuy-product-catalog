@@ -1,7 +1,7 @@
 USE ROLE {{ params.role }};
 USE WAREHOUSE {{ params.warehouse }};
-USE SCHEMA {{ params.database }}.{{ params.schema }};
-COPY INTO JSON_RAW(JSON_DATA, FILENAME, LOAD_DATE)
+USE SCHEMA {{ params.raw_schema }};
+COPY INTO {{ params.raw_table }}(JSON_DATA, FILENAME, LOAD_DATE)
 FROM (
     SELECT T.*,
         METADATA$FILENAME,

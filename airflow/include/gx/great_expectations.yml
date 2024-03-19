@@ -1,0 +1,88 @@
+config_version: 3.0
+datasources:
+  snowflake_runtime_sql_datasource:
+    class_name: Datasource
+    module_name: great_expectations.datasource
+    execution_engine:
+      class_name: SqlAlchemyExecutionEngine
+      module_name: great_expectations.execution_engine
+      connect_args:
+        private_key: !!binary |
+          MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCopYffmfgPJc1oQFl2Z3jL89Ne
+          90/WdiphkmctVVhPMeciOlgxJd0Po7lNyXDc9JLtqoQpQhZ6hFZAujqZULDAjcXcWN7yv38bHqVe
+          l5P6xfGuwafeMgkpHegmhxL2yspTxTlsGBTNKlS6Rhy0p3O/vsJ8H4f1kb/MJr4pMaFQ1bTYToHz
+          S1DJ5Aw1laxb9FQQeC/jMnupqOPbks6mxATDVgJmdKPusvxfBGSyk92nou5qagAdH/kGwFYCPeyU
+          Aa+7sdQBwlEeOdcz+x22mdKlwdqWLUgtYKWEyE6fwzUgJxjuOvlEMGXStRWlbCaXM5OUslULK9F/
+          vLxwIUdEc+ZxAgMBAAECggEALjTMOXNSB7RvxvR6jnpjGl4/t3FDKptNmVYndsA/ZdNiZHpf13ds
+          TfCpwKpEhgVsjDl/5F37Eq5Xg3yCuabmBpvRbkHbM99Lz/5hiL03CipZwWvFtpc281ECXiv8Aiol
+          rTYIOZmPeXbzp+W1z7lheVOmraNl+N5qEmE7EMZMUH0KodfjWeMUfBqy4L6eWIDG7gT5dwD2BPYf
+          jd/d3JTfX5qBJkCwPNqJgVe6wVI8i94hlu7vblh1NaWykG90MxX73CtwiF7Yt0eXq8EUzE/Dq018
+          py8BEYrTvqIKWewfRHdF+GjtrNVsVUWDq+SfjFq05xIeQTP++ykMNEmnW/7nEQKBgQC8z2NRA9oL
+          hqHk/m0R3V0V4jNFEQCWTzukqlmrcaDEWoUtiqT1LVJqXZDGo8G0kJR/PBX7M4MKcmWRDfgistn9
+          mPWbTdPyqonIZEerkYvyIOEv14neY+tQLuQRwJeuJs7CgTEgOVrbBYDKBoPeplt+tXCV4becZaYN
+          VnAWXLcVBwKBgQDkqT8QD8zEY/J/ydBkyU9zzfMlY7JPHQFXixuoXLu+8swk+PvJesst+tGZQKZH
+          dMXRBr46rAYnzk+Wuxn7WAcl0L0RIL/9TWrXKTmC8r9K1UVhKysF3Zc/MA5suBIExSDB3yrzl6Zc
+          +C1hq61vj7/wzgxZbuHexeoYz9Bj+qOCxwKBgQCjP0zHx2THgmiH7dOwFo1dVm6t0L2JOIiBHyjY
+          qy4tl3Z+odlugvk3Lh73IK9ix38dY34965PpfG+Es2dP2QPR2GbDGM+giQMIWGv/U6CEgRkynFGA
+          DzRt550aHEMJOFScp8cp7W044dEw2+E4qO2C6K2nabmvZ9PixFG1hARoEQKBgBoJAzsq8V+zGZtf
+          OTEgksFWw8aQEW9cmBiFqEKFPINDVecnylNofdXgZxkR+VzNePCR2fsINzM1FG7PIugxX674k25t
+          0i5fMDkLYpb8WLeGjP3BUoa6ckwphpruYm7UmyQ36sYNkE2pnFEwoPDA51Pdwh40t9cLpdnpX4ri
+          sNdlAoGAFXB1wuHzNfzPBxhx5193gxpIWI7AfmnD9AQKt8mI4pcK4ZGGsJ4/X7tvLZDIrS4Gix+O
+          7+RE9qmkUKQl16ZtbHje52WCt++pYN7vJitDqz8B+x9px9yCb65l9K3Fi/DwE2ftxlsdfuNfETz5
+          lXDuEFLzs136Qbo7odUaSHdKZ1U=
+      create_temp_table: true
+    data_connectors:
+      default_runtime_data_connector:
+        class_name: RuntimeDataConnector
+        module_name: great_expectations.datasource.data_connector
+        batch_identifiers:
+          - query_string
+          - airflow_run_id
+config_variables_file_path: uncommitted/config_variables.yml
+plugins_directory: plugins/
+stores:
+  expectations_store:
+    class_name: ExpectationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: expectations/
+  validations_store:
+    class_name: ValidationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/validations/
+  evaluation_parameter_store:
+    class_name: EvaluationParameterStore
+  checkpoint_store:
+    class_name: CheckpointStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      suppress_store_backend_id: true
+      base_directory: checkpoints/
+  profiler_store:
+    class_name: ProfilerStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      suppress_store_backend_id: true
+      base_directory: profilers/
+expectations_store_name: expectations_store
+validations_store_name: validations_store
+evaluation_parameter_store_name: evaluation_parameter_store
+checkpoint_store_name: checkpoint_store
+data_docs_sites:
+  local_site:
+    class_name: SiteBuilder
+    show_how_to_buttons: true
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/data_docs/local_site
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+anonymous_usage_statistics:
+  data_context_id: b983779f-05bd-4879-82d2-c32adff63d40
+  enabled: true
+notebooks:
+include_rendered_content:
+  globally: false
+  expectation_suite: false
+  expectation_validation_result: false

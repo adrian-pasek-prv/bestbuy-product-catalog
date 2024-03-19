@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from operators.http_to_s3 import HttpToS3Operator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from great_expectations_provider.operators.great_expectations import GreatExpectationsOperator
 from airflow.models import Variable
 from datetime import datetime
 from datetime import timedelta
@@ -41,6 +42,10 @@ with DAG(
     },
     params={
         "snowflake_conn_id": "snowflake",
+        "warehouse": "DATA_LOAD_XS",
+        "role": "DATA_LOADER",
+        "raw_schema": "BESTBUY_RAW.PUBLIC",
+        "raw_table": "JSON_RAW"
     },
     template_searchpath="/opt/airflow/plugins/sql",
 ) as dag:
@@ -92,23 +97,29 @@ with DAG(
         kwargs_list
     )
 
+
     # Copy into Snowflake
     copy_into_snowflake_task = SQLExecuteQueryOperator(
         task_id="copy_into_snowflake_task",
         conn_id="snowflake",
         autocommit=True,
         sql="copy_into_json.sql",
-        params={
-            "warehouse": "DATA_LOAD_XS",
-            "role": "DATA_LOADER",
-            "database": "BESTBUY_RAW",
-            "schema": "PUBLIC",
-        },
         split_statements=True
+    )
+
+    # Check row count
+    check_copy_into_row_count = GreatExpectationsOperator(
+        task_id="check_copy_into_row_count",
+        conn_id="snowflake",
+        schema="PUBLIC",
+        data_asset_name="JSON_RAW",
+        data_context_root_dir="include/gx",
+        query_to_validate="SELECT COUNT(*) FROM {{ params.raw_schema }}.{{ params.raw_table}} WHERE LOAD_DATE = '{{ ds }}'",
+        expectation_suite_name="standard_suite"
     )
 
     end_task = EmptyOperator(
         task_id="end_task"
     )
 
-    start_task >> get_products_task >> copy_into_snowflake_task >> end_task
+    start_task >> get_products_task >> copy_into_snowflake_task >> check_copy_into_row_count >> end_task

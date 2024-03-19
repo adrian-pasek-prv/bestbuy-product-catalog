@@ -77,6 +77,7 @@ x-airflow-common:
     BESTBUY_API_KEY: ${BESTBUY_API_KEY}
     AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
     AIRFLOW__CORE__TEST_CONNECTION: 'enabled'
+    AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
